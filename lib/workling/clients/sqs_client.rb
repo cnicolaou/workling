@@ -20,11 +20,32 @@ require 'right_aws'
 #
 #     # The number of SQS messages to retrieve at once. The maximum and default
 #     # value is 10.
-#     messages_per_req: 5
+#     messages_per_req: 10
 #
 #     # The SQS visibility timeout for retrieved messages. Defaults to 30 seconds.
-#     visibility_timeout: 15
-#   
+#     visibility_timeout: 30
+#
+#     # The number of seconds to reserve for deleting a message from the qeueue.
+#     # If buffered messages are getting too close to the visibility timeout,
+#     # we drop them so they will get picked up the next time a worker retrieves
+#     # messages, in order to avoid duplicate processing.
+#     visibility_reserve: 10
+#
+#     # Below are various retry and timeout settings for the underlying right_aws
+#     # and right_http_connection libraries. You may want to tweak these based on
+#     # your workling usage. I recommend fairly low values, as large values can
+#     # cause your Rails actions to hang in case of SQS issues.
+#
+#     # Maximum umber of seconds to retry high level SQS errors. right_aws
+#     # automatically retries using exponential back-off.
+#     aws_reiteration_time: 2
+#
+#     # Low-level HTTP retry / timeout settings.
+#     http_retry_count: 2
+#     http_retry_delay: 1
+#     http_open_timeout: 2
+#     http_read_timeout: 10
+#
 module Workling
   module Clients
     class SqsClient < Workling::Clients::Base
@@ -36,6 +57,13 @@ module Workling
       DEFAULT_MESSAGES_PER_REQ = 10
       DEFAULT_VISIBILITY_TIMEOUT = 30
       DEFAULT_VISIBILITY_RESERVE = 10
+
+      # Default right_aws and right_http_connection retry / timeout settings.
+      AWS_REITERATION_TIME = 2
+      HTTP_RETRY_COUNT = 2
+      HTTP_RETRY_DELAY = 1
+      HTTP_OPEN_TIMEOUT = 2
+      HTTP_READ_TIMEOUT = 10
       
       # Mainly exposed for testing purposes
       attr_reader :sqs_options
@@ -58,6 +86,16 @@ module Workling
         @visibility_reserve = @sqs_options['visibility_reserve'] || DEFAULT_VISIBILITY_RESERVE
         
         begin
+          # Set right_aws / right_http_connection settings based on custom
+          # options or default values.
+          RightAws::AWSErrorHandler::reiteration_time = @sqs_options['aws_reiteration_time'] || AWS_REITERATION_TIME
+          new_http_params = Rightscale::HttpConnection::params.dup
+          new_http_params[:http_connection_retry_count] = @sqs_options['http_retry_count'] || HTTP_RETRY_COUNT
+          new_http_params[:http_connection_retry_delay] = @sqs_options['http_retry_delay'] || HTTP_RETRY_DELAY
+          new_http_params[:http_connection_open_timeout] = @sqs_options['http_open_timeout'] || HTTP_OPEN_TIMEOUT
+          new_http_params[:http_connection_read_timeout] = @sqs_options['http_read_timeout'] || HTTP_READ_TIMEOUT
+          Rightscale::HttpConnection::params = new_http_params
+
           @sqs = RightAws::SqsGen2.new(
             @sqs_options['aws_access_key_id'],
             @sqs_options['aws_secret_access_key'],

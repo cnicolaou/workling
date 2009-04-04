@@ -259,6 +259,27 @@ will likely be sufficient:
         # The SQS visibility timeout for retrieved messages. Defaults to 30 seconds.
         visibility_timeout: 30
 
+        # The number of seconds to reserve for deleting a message from the qeueue.
+        # If buffered messages are getting too close to the visibility timeout,
+        # we drop them so they will get picked up the next time a worker retrieves
+        # messages, in order to avoid duplicate processing.
+        visibility_reserve: 10
+        
+        # Below are various retry and timeout settings for the underlying right_aws
+        # and right_http_connection libraries. You may want to tweak these based on
+        # your workling usage. I recommend fairly low values, as large values can
+        # cause your Rails actions to hang in case of SQS issues.
+        
+        # Maximum umber of seconds to retry high level SQS errors. right_aws
+        # automatically retries using exponential back-off.
+        aws_reiteration_time: 2
+        
+        # Low-level HTTP retry / timeout settings.
+        http_retry_count: 2
+        http_retry_delay: 1
+        http_open_timeout: 2
+        http_read_timeout: 10
+
 Now start the Workling Client:
 
     1 ./script/workling_client start
