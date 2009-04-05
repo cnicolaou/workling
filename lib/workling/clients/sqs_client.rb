@@ -36,7 +36,7 @@ require 'right_aws'
 #     # your workling usage. I recommend fairly low values, as large values can
 #     # cause your Rails actions to hang in case of SQS issues.
 #
-#     # Maximum umber of seconds to retry high level SQS errors. right_aws
+#     # Maximum number of seconds to retry high level SQS errors. right_aws
 #     # automatically retries using exponential back-off.
 #     aws_reiteration_time: 2
 #

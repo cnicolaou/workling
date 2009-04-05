@@ -231,7 +231,7 @@ Configuring Workling to use SQS is very straightforward and requires no addition
 
 Install the RightAws gem:
 
-    1. sudo gem install right_aws
+    sudo gem install right_aws
 
 Configure Workling to use the SqsClient. Add this to your environment:
 
@@ -270,7 +270,7 @@ will likely be sufficient:
         # your workling usage. I recommend fairly low values, as large values can
         # cause your Rails actions to hang in case of SQS issues.
         
-        # Maximum umber of seconds to retry high level SQS errors. right_aws
+        # Maximum number of seconds to retry high level SQS errors. right_aws
         # automatically retries using exponential back-off.
         aws_reiteration_time: 2
         
@@ -282,7 +282,7 @@ will likely be sufficient:
 
 Now start the Workling Client:
 
-    1 ./script/workling_client start
+    script/workling_client start
     
 You're good.
 
