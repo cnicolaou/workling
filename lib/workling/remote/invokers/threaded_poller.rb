@@ -9,39 +9,39 @@ module Workling
   module Remote
     module Invokers
       class ThreadedPoller < Workling::Remote::Invokers::Base
-        
+
         cattr_accessor :sleep_time, :reset_time
-      
+
         def initialize(routing, client_class)
           super
-          
+
           ThreadedPoller.sleep_time = Workling.config[:sleep_time] || 2
           ThreadedPoller.reset_time = Workling.config[:reset_time] || 30
-          
+
           @workers = ThreadGroup.new
           @mutex = Mutex.new
-        end      
-          
-        def listen                
+        end
+
+        def listen
           # Allow concurrency for our tasks
-          ActiveRecord::Base.allow_concurrency = true
+          Rails.application.config.allow_concurrency = true
 
           # Create a thread for each worker.
           Workling::Discovery.discovered.each do |clazz|
             logger.debug("Discovered listener #{clazz}")
             @workers.add(Thread.new(clazz) { |c| clazz_listen(c) })
           end
-          
+
           # Wait for all workers to complete
           @workers.list.each { |t| t.join }
 
           logger.debug("Reaped listener threads. ")
-        
+
           # Clean up all the connections.
           ActiveRecord::Base.verify_active_connections!
           logger.debug("Cleaned up connection: out!")
         end
-      
+
         # Check if all Worker threads have been started. 
         def started?
           logger.debug("checking if started... list size is #{ worker_threads }")
