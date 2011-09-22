@@ -23,7 +23,7 @@ context "The SQS client" do
   
   context "when connecting" do
 
-    specify "should load its config from RAILS_ENV/config/workling.yml" do
+    specify "should load its config from Rails.env/config/workling.yml" do
       @client.sqs_options['aws_access_key_id'].should == '1234567890987654321'
       @client.sqs_options['aws_secret_access_key'].should == 'AbcdeFg1234567890hIJklmnOPQ12345678'
       @client.sqs_options['prefix'].should == 'foo_'
